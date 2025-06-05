@@ -20,16 +20,16 @@ Then, follow [instructions](https://github.com/mlcommons/algorithmic-efficiency/
 
 ## Run
 
-We provide submission files for Celo, Celo-Adam (variant of Celo that uses Adam update rule instead of learned MLP update) and VeLO as example scripts for AlgoPerf evaluation in `submissions/` directory. All the submission scripts are roughly the same except `init_optimizer_state` method that loads and builds pretrained optimizer object. Other (or new!) learned optimizers can be evaluating by simply modifying the `init_optimizer_state` method of any of these submission files while keeping rest of the code as it is. Make sure that optimizer checkpoint is correct in their corresponding submission directory.
+We provide submission files for Celo, Celo-Adam (variant of Celo that uses Adam update rule instead of learned MLP update) and VeLO as example scripts for AlgoPerf evaluation in `submissions/` directory. All the submission scripts are roughly the same except `init_optimizer_state` method that loads and builds pretrained optimizer object. Other (or new!) learned optimizers can be evaluated by simply modifying the `init_optimizer_state` method in any of these submission files while keeping rest of the code as it is. Make sure that the learned optimizer checkpoint is correct and located in the corresponding submission directory.
 
-To run a learned optimizer on AlgoPerf, first clone [algorithmic-efficiency]() and copy the respective optimizer directory (say `celo`) in their `submissions` directory:
+To run a learned optimizer on AlgoPerf, first clone [algorithmic-efficiency](https://github.com/mlcommons/algorithmic-efficiency/) and copy the respective optimizer directory (say `submissions/celo_adam`) in algorithmic-efficiency `submissions` directory:
 ```
 git clone git@github.com:mlcommons/algorithmic-efficiency.git
 cd algorithmic-efficiency
 cp -r /path/to/celo/algoperf/submissions/celo_adam submissions/
 ```
 
-We provide example commands below for each task in AlgoPerf to test learned optimizers. `max_global_steps` argument for each workload is picked from the prize qualification baseline which was used for tuning. In AlgoPerf self-tuning track competition, 3x of this value is used to give more time to algorithms to hit the targets.
+We provide example commands below for each task in AlgoPerf to test learned optimizers. `max_global_steps` argument for each workload is picked from the prize qualification baseline which was used for tuning. In AlgoPerf self-tuning competition track, 3x of this value is used to give more time to self-tuning algorithms to hit the targets.
 
 The commands below should be run from algorithmic-efficiency directory and following flags should be modified as per the use case:
 - `--submission_path` -- path to optimizer being evaluated
