@@ -69,9 +69,6 @@ def train(unused_argv):
         json.dump(FLAGS.flag_values_dict(), f, ensure_ascii=False, indent=4)
         logging.info(json.dumps(FLAGS.flag_values_dict(), ensure_ascii=False, indent=4))
         logging.info("Saved config at: {}".format(os.path.join(ckpt_dir, "config.json")))
-        # save sweep script in checkpoint directory for reproducibility
-        shutil.copy("scripts/train_sweep_multistage.py", ckpt_dir)
-        logging.info(f"Saved sweep script at: {ckpt_dir}")
     summary_writer = summary.MultiWriter(summary.JaxboardWriter(logdir), summary.PrintWriter())
 
     # setup optimizer and tasks for meta-training
