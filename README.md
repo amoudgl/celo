@@ -4,11 +4,14 @@
 
 JAX implementation of our paper [Celo: Training Versatile Learned Optimizers on a Compute Diet](https://arxiv.org/abs/2501.12670):
 ```
-@article{moudgil2025learning,
-  title={Learning Versatile Optimizers on a Compute Diet},
-  author={Moudgil, Abhinav and Knyazev, Boris and Lajoie, Guillaume and Belilovsky, Eugene},
-  journal={arXiv preprint arXiv:2501.12670},
-  year={2025}
+@article{
+  moudgil2025celo,
+  title={Celo: Training Versatile Learned Optimizers on a Compute Diet},
+  author={Abhinav Moudgil and Boris Knyazev and Guillaume Lajoie and Eugene Belilovsky},
+  journal={Transactions on Machine Learning Research},
+  issn={2835-8856},
+  year={2025},
+  url={https://openreview.net/forum?id=SLqJbt4emY}
 }
 ```
 
