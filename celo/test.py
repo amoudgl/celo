@@ -37,16 +37,19 @@ flags.DEFINE_float("test_reparam", None, "reparam aug at test-time")
 flags.DEFINE_integer("steps", None, "number of inner training steps")
 flags.DEFINE_string("ckpt_dir", None, "directory to load checkpoint from")
 flags.DEFINE_string("ckpt_file", "theta.state", "name of checkpoint file")
-flags.DEFINE_string("test_log_dir", "logs/test", "common dir for all tensorboard logs")
+flags.DEFINE_string("test_log_dir", "logs/test", "common dir for all experiments logs")
 flags.DEFINE_string("results_save_dir", "eval_results/", "common dir to dump meta-testing results")
-flags.DEFINE_integer("seed", None, "seed id")
-flags.DEFINE_integer("seeds", 3, "number of runs")
+flags.DEFINE_integer("seed", 0, "seed id")
 flags.DEFINE_string("name", None, "run name")
-flags.DEFINE_integer("metrics_every", 10, "plot metrics this frequently")
+flags.DEFINE_integer("metrics_every", 10, "compute additional validation metrics this frequently")
+flags.DEFINE_bool("disable_wandb", False, "disable wandb logging e.g. for debugging")
+flags.DEFINE_string("wandb_project", None, "wandb project name")
+flags.DEFINE_string("wandb_entity", None, "wandb project entity, specify username for individuals")
 # fmt: on
 
 flags.mark_flag_as_required("optimizer")
 flags.mark_flag_as_required("steps")
+flags.mark_flag_as_required("name")
 FLAGS = flags.FLAGS
 
 
@@ -74,18 +77,22 @@ def test(unused_argv):
         pretrained_params = checkpoints.load_state(ckpt_path, theta)
         opt = lopt.opt_fn(pretrained_params)
         ckpt_dirname = os.path.abspath(FLAGS.ckpt_dir).split("/")[-1]
-        eval_name = f"ckpt:{ckpt_dirname}__task:{task_name}__steps:{FLAGS.steps}__seed:{seed}"
     else:
         opt = get_optimizer(FLAGS.optimizer)
-        eval_name = f"ckpt:{FLAGS.optimizer}__task:{task_name}__steps:{FLAGS.steps}__seed:{seed}"
 
     # set task and seed
-    logdir = os.path.join(FLAGS.test_log_dir, eval_name)
-    save_dir = os.path.join(FLAGS.results_save_dir, eval_name)
+    save_dir = os.path.join(FLAGS.results_save_dir, FLAGS.name)
     filesystem.make_dirs(save_dir)
-    filesystem.make_dirs(logdir)
     key = jax.random.PRNGKey(seed)
-    summary_writer = summary.MultiWriter(summary.PrintWriter(), summary.JaxboardWriter(logdir))
+    if FLAGS.disable_wandb:
+        summary_writer = summary.PrintWriter()
+    else:
+        wandb_writer = summary.WandbWriter(project=FLAGS.wandb_project,
+                                           entity=FLAGS.wandb_entity,
+                                           logdir=FLAGS.test_log_dir,
+                                           config=FLAGS.flag_values_dict(),
+                                           name=FLAGS.name)
+        summary_writer = summary.MultiWriter(wandb_writer, summary.PrintWriter())
 
     # launch inner training
     results = single_task_training_curves(

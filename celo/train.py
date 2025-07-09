@@ -37,12 +37,16 @@ flags.DEFINE_string("init_from_ckpt", None, "path to serialized lopt checkpoint 
 flags.DEFINE_string("init_ckpt_optimizer_name", None, "checkpoint optimizer name to partially load params, skip if optimizer pytree matches checkpoint pytree.")
 flags.DEFINE_bool("resume", False, "resume training from latest checkpoint using trainer saved state")
 flags.DEFINE_bool("train_partial", False, "enables training subset of celo params while keeping rest frozen")
-flags.DEFINE_string("name", None, "run name, ckpt and tensorboard dirs are created with this name")
+flags.DEFINE_string("name", None, "run name, ckpt and wandb runs are created with this name")
 flags.DEFINE_float("outer_lr", 1e-4, "learning rate of meta-trainer")
 flags.DEFINE_integer("outer_iterations", 100000, "number of meta-iterations")
 flags.DEFINE_integer("ckpt_interval", 5000, "checkpoint save interval")
+flags.DEFINE_integer("metrics_every", 10, "log interval of additional metrics and intermediate values in jit functions")
 flags.DEFINE_integer("seed", 0, "training seed")
 flags.DEFINE_string("aug", None, "task augmentation")
+flags.DEFINE_bool("disable_wandb", False, "disable wandb logging e.g. for debugging")
+flags.DEFINE_string("wandb_project", None, "wandb project name")
+flags.DEFINE_string("wandb_entity", None, "wandb project entity, specify username for individuals")
 # fmt: on
 
 flags.mark_flag_as_required("optimizer")
@@ -59,17 +63,21 @@ def train(unused_argv):
     # setup logdir
     seed = FLAGS.seed
     key = jax.random.PRNGKey(seed)
-    logdir = os.path.join(FLAGS.train_log_dir, FLAGS.name)
     ckpt_dir = os.path.join(FLAGS.ckpt_save_dir, FLAGS.name)
-    if os.path.exists(logdir) and os.path.isdir(logdir):
-        shutil.rmtree(logdir)  # clean up if dir exists to not mess up tensorboard logs
-    filesystem.make_dirs(logdir)
     filesystem.make_dirs(ckpt_dir)
     with open(os.path.join(ckpt_dir, "config.json"), "w", encoding="utf-8") as f:
         json.dump(FLAGS.flag_values_dict(), f, ensure_ascii=False, indent=4)
         logging.info(json.dumps(FLAGS.flag_values_dict(), ensure_ascii=False, indent=4))
         logging.info("Saved config at: {}".format(os.path.join(ckpt_dir, "config.json")))
-    summary_writer = summary.MultiWriter(summary.JaxboardWriter(logdir), summary.PrintWriter())
+    if FLAGS.disable_wandb:
+        summary_writer = summary.PrintWriter()
+    else:
+        wandb_writer = summary.WandbWriter(project=FLAGS.wandb_project,
+                                           entity=FLAGS.wandb_entity,
+                                           logdir=FLAGS.train_log_dir,
+                                           config=FLAGS.flag_values_dict(),
+                                           name=FLAGS.name)
+        summary_writer = summary.MultiWriter(wandb_writer, summary.PrintWriter())
 
     # setup optimizer and tasks for meta-training
     lopt = get_optimizer(FLAGS.optimizer)
@@ -138,14 +146,14 @@ def train(unused_argv):
         initial=start_iteration,
         total=FLAGS.outer_iterations,
     ):
-        with_m = True if i % 10 == 0 else False
+        with_m = True if i % FLAGS.metrics_every == 0 else False
         key1, key = jax.random.split(key)
         outer_trainer_state, loss, metrics = outer_trainer.update(
             outer_trainer_state, key1, with_metrics=with_m
         )
         losses.append(loss)
 
-        # log out summaries to tensorboard
+        # log summaries to wandb
         if with_m:
             log_m = {}
             summary_writer.scalar("average_meta_loss", np.mean(losses), step=i)
