@@ -141,7 +141,7 @@ Checkout test script `celo/test.py` to evaluate any optimizer on all the tasks c
 
 To do phase 1 meta-training of Celo (only meta-train MLP update rule) with task augmentation, do:
 ```
-python -m celo.train --optimizer celo_phase1 --train_partial --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --trainer pes --name train_celo_phase1 --outer_lr 3e-4
+python -m celo.train --optimizer celo_phase1 --train_partial --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --trainer pes --aug reparam --aug_reparam_level global --name train_celo_phase1 --outer_lr 3e-4 --task fast_velo
 ```
 
 To continue phase 2 meta-training of Celo (meta-train scheduler with frozen MLP update) from phase 1 checkpoint, do:
