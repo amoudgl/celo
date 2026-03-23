@@ -89,9 +89,13 @@ from learned_optimization.optimizers import nadamw, optax_opts
 
 from celo.optimizers import adafac_mlp_lopt
 from celo.optimizers import celo as celo_lopt
+from celo.optimizers import celo2
 from celo.optimizers import celo_adam, nn_adam, rnn_mlp_lopt, velo
 
 flags.DEFINE_float("test_lr", 1e-3, "learning rate, not applicable to learned optimizers")
+flags.DEFINE_float("step_mult", 0.001, "step multiplier")
+flags.DEFINE_float("weight_decay", 0.0, "weight decay")
+flags.DEFINE_string("regex_1d", r"/b$", "regex for 1D parameters in meta-training tasks (used in Celo2)")
 
 
 def get_optimizer(name):
@@ -118,6 +122,40 @@ def get_optimizer(name):
             param_inits=1,
             train_phase=2,
             summarize_each_layer=False,
+        )
+    elif name == "celo2base":
+        return celo2.Celo2Base(
+            step_mult=FLAGS.step_mult,
+            weight_decay=FLAGS.weight_decay,
+            orthogonalize=False,
+            initial_momentum_decays=(0.9, 0.99, 0.999),
+            initial_rms_decays=(0.95,),
+            initial_adafactor_decays=(0.9, 0.99, 0.999),
+            mlp_activation="relu",
+            ff_hidden_size=8,
+            normalize_input=True,
+            normalize_output=True,
+        )
+    elif name == "celo2":
+        return celo2.Celo2(
+            regex_1d=FLAGS.regex_1d,
+            step_mult=FLAGS.step_mult,
+            weight_decay=FLAGS.weight_decay,
+            orthogonalize=True,
+            initial_momentum_decays=(0.9, 0.99, 0.999),
+            initial_rms_decays=(0.95,),
+            initial_adafactor_decays=(0.9, 0.99, 0.999),
+            ns_coeffs=(3.4445, -4.7750, 2.0315),
+            ns_iters=5,
+            ns_eps=1e-8,
+            mlp_activation="relu",
+            ff_hidden_size=8,
+            normalize_input=True,
+            normalize_output=True,
+            adam_b1=0.9,
+            adam_b2=0.95,
+            adam_epsilon=1e-8,
+            mult_1d=20.0,
         )
     elif name == "celo_adam":
         return celo_adam.Celo(

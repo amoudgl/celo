@@ -1,0 +1,31 @@
+[project]
+name = "celo"
+version = "0.0.2"
+description = "Compute-efficient learned optimizers in JAX"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "absl-py>=2.3.1",
+    "dm-haiku>=0.0.14",
+    "flax>=0.11.1",
+    "gin-config>=0.5.0",
+    "jax[cuda12]>=0.7.1",
+    "learned-optimization",
+    "omegaconf>=2.3.0",
+    "optax>=0.2.5",
+    "oryx",
+    "pandas>=2.3.2",
+    "seqio>=0.0.19",
+    "tensorflow-datasets>=4.9.9",
+    "tensorflow-probability>=0.25.0",
+    "tf-keras>=2.19.0",
+    "tqdm>=4.67.1",
+    "wandb>=0.21.1",
+]
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+learned-optimization = { git = "https://github.com/amoudgl/learned_optimization.git" }
+oryx = { git = "https://github.com/jax-ml/oryx.git" }

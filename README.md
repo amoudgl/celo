@@ -28,14 +28,16 @@ We evaluate Celo meta-generalization capabilities on a set of 17 diverse evaluat
 
 ## Setup
 
-First, setup `learned_optimization` repo along with its dependencies by following the instructions [here](https://github.com/amoudgl/learned_optimization?tab=readme-ov-file#update).
+Clone the repo and install dependencies with [uv](https://github.com/astral-sh/uv):
 
-Then, install `celo` package:
 ```
 git clone git@github.com:amoudgl/celo.git
 cd celo
-pip install -e .
+uv sync --active
+source .venv/bin/activate
 ```
+
+Alternatively, use `pip install -e .` in a suitable virtualenv if you manage `learned_optimization` yourself (see [learned_optimization setup](https://github.com/amoudgl/learned_optimization?tab=readme-ov-file#update)).
 
 ## Usage
 
@@ -139,19 +141,21 @@ Checkout test script `celo/test.py` to evaluate any optimizer on all the tasks c
 
 ## Meta-training
 
+Checkpoints, config, and metrics are written under `<experiment_root>/train/<exp_id>/` (default `experiment_root` is `./experiments`, or set `EXPERIMENT_ROOT`). Use `--exp_id` for a fixed run directory; otherwise an `exp_id` is auto-generated from `--exp_name`, time, and hyperparameters.
+
 To do phase 1 meta-training of Celo (only meta-train MLP update rule) with task augmentation, do:
 ```
-python -m celo.train --optimizer celo_phase1 --train_partial --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --trainer pes --aug reparam --aug_reparam_level global --name train_celo_phase1 --outer_lr 3e-4 --task fast_velo
+python -m celo.train --optimizer celo_phase1 --train_partial --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --trainer pes --aug reparam --aug_reparam_level global --exp_id train_celo_phase1 --outer_lr 3e-4 --task fast_velo
 ```
 
 To continue phase 2 meta-training of Celo (meta-train scheduler with frozen MLP update) from phase 1 checkpoint, do:
 ```
-python -m celo.train --optimizer celo --train_partial --init_from_ckpt ./train_celo_phase1/theta.state --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --name celo_phase2 --task fast_velo --outer_lr 3e-4 --aug reparam --aug_reparam_level global --name train_celo_phase2
+python -m celo.train --optimizer celo --train_partial --init_from_ckpt ./experiments/train/train_celo_phase1/theta.state --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --exp_id train_celo_phase2 --task fast_velo --outer_lr 3e-4 --aug reparam --aug_reparam_level global
 ```
 
 To meta-train any other learned optimizer (say, RNN with MLP update rule) without two-stage training with task augmentation, simply skip `--train_partial` flag:
 ```
-python -m celo.train --optimizer rnn_mlp --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --task fast_velo --outer_lr 1e-4 --trainer pes --aug reparam --aug_reparam_level global --name train_rnn
+python -m celo.train --optimizer rnn_mlp --outer_iterations 100000 --max_unroll_length 2000 --seed 0 --task fast_velo --outer_lr 1e-4 --trainer pes --aug reparam --aug_reparam_level global --exp_id train_rnn
 ```
 
 To meta-train without task augmentation, skip `--aug` flag which is set to `None` by default.
@@ -166,8 +170,9 @@ Key flags:
 - `--max_unroll_length` -- maximum rollout length during meta-training
 - `--init_from_ckpt` -- if specified, optimizer params are loaded from this checkpoint in meta-training instead of random initialization
 - `--aug` -- if specified, task augmentation via reparametrization will be used
+- `--experiment_root`, `--exp_name`, `--exp_id` -- where runs are saved and how the run is named for W&B
 
-Checkout all meta-training flags along with their descriptions in `celo/train.py`.
+Periodic metrics are saved as `metrics.npz` in the run directory. See all flags in `celo/train.py`.
 
 
 ## Acknowledgements
