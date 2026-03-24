@@ -48,9 +48,8 @@ flags.DEFINE_integer("metrics_every", 50, "log interval of additional metrics an
 flags.DEFINE_integer("seed", 0, "training seed")
 flags.DEFINE_string("aug", None, "task augmentation")
 flags.DEFINE_bool("disable_wandb", False, "disable wandb logging e.g. for debugging")
-flags.DEFINE_string("wandb_project", "ttt-train", "wandb project name")
-flags.DEFINE_string("wandb_entity", "amoudgl", "wandb project name")
-# flags.DEFINE_string("wandb_tags", None, "optionally specify wandb tags separated by comma like 'tag1,tag2,tag3'")
+flags.DEFINE_string("wandb_project", "celo-train", "wandb project name")
+flags.DEFINE_string("wandb_entity", None, "wandb project name")
 # fmt: on
 
 flags.mark_flag_as_required("optimizer")
